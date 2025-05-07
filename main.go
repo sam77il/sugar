@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/sam77il/dusch-wand/middleware"
-	"github.com/sam77il/dusch-wand/sugar"
+	"github.com/sam77il/sugar/middleware"
+	"github.com/sam77il/sugar/sugar"
 )
 
 func main() {
