@@ -1,5 +1,5 @@
 {{ define "header" }}
-    <header>
-        <h1>Sugar Web Framework</h1>
-    </header>
+<header>
+    <h1>Sugar Web Framework</h1>
+</header>
 {{ end }}

@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type HandlerFunction func(*Context)
@@ -23,13 +25,15 @@ type Middleware struct {
 }
 
 type Sugar struct {
+	DB *pgxpool.Pool
 	Routes []Route
 	Middlewares []Middleware
 	NotFoundRoute HandlerFunction
 }
 
 type Context struct {
-	request *http.Request
+	DB *pgxpool.Pool
+	Request *http.Request
 	writer http.ResponseWriter
 }
 
@@ -44,7 +48,7 @@ func (c *Context) HTML(html string) {
 }
 
 func (c *Context) Redirect(url string) {
-	http.Redirect(c.writer, c.request, url, http.StatusFound)
+	http.Redirect(c.writer, c.Request, url, http.StatusFound)
 }
 
 func (c *Context) JSON(content any) {
@@ -54,7 +58,7 @@ func (c *Context) JSON(content any) {
 }
 
 func (c *Context) NotFound() {
-	http.NotFound(c.writer, c.request)
+	http.NotFound(c.writer, c.Request)
 }
 
 func (c *Context) Get(url string) (string, http.Header, error) {
@@ -82,13 +86,14 @@ func (c *Context) URL() *URL {
 	// }
 
 	return &URL{
-		Path: c.request.URL.Path,
-		Query: c.request.URL.Query(),
+		Path: c.Request.URL.Path,
+		Query: c.Request.URL.Query(),
 	}
 }
 
-func New(middlewares []Middleware) *Sugar {
+func New(db *pgxpool.Pool, middlewares []Middleware) *Sugar {
 	return &Sugar{
+		DB: db,
 		Middlewares: middlewares,
 	}
 }
@@ -101,7 +106,7 @@ func (s *Sugar) Get(path string, handler HandlerFunction) {
 	})
 }
 
-func (s *Sugar) Listen(port int) error {
+func (s *Sugar) Listen(port int) {
 	router := http.NewServeMux()
 	for _, route := range s.Routes {
 		handler := func(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +115,8 @@ func (s *Sugar) Listen(port int) error {
 				return
 			}
 			ctx := Context{
-				request: r,
+				DB: s.DB,
+				Request: r,
 				writer: w,
 			}
 			route.HandlerFunc(&ctx)
@@ -129,6 +135,5 @@ func (s *Sugar) Listen(port int) error {
 		router.HandleFunc(route.Path, handler)
 	}
 
-	err := http.ListenAndServe(":" + strconv.Itoa(port), router)
-	return err
+	log.Fatal(http.ListenAndServe(":" + strconv.Itoa(port), router))
 }

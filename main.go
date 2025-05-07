@@ -2,15 +2,25 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"html/template"
 	"log"
+	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/sam77il/sugar/middleware"
 	"github.com/sam77il/sugar/sugar"
 )
 
 func main() {
-	app := sugar.New([]sugar.Middleware{
+	godotenv.Load()
+	db, err := pgxpool.New(context.Background(), os.Getenv("POSTGRES_URI"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	app := sugar.New(db, []sugar.Middleware{
 		{
 			Path: "/a",
 			MiddlewareFunc: middleware.LogRoute,
@@ -35,38 +45,34 @@ type User struct {
 
 func rootHandler(ctx *sugar.Context) {
 	tmpl := template.Must(template.ParseFiles(
-	    "layouts/root.sugar",
 	    "components/header.sugar",
 	    "components/footer.sugar",
 	    "pages/root.sugar",
 	))
+
+	rows, err := ctx.DB.Query(ctx.Request.Context(), "SELECT email, password FROM accounts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
 		
-	data := struct {
-	    Head_Title  string
+	var accounts []User
+	for rows.Next() {
+		var acc User
+		if err := rows.Scan(&acc.Email, &acc.Password); err != nil {
+			log.Fatal(err)
+		}
+		accounts = append(accounts, acc)
+	}
+
+	data := struct{
 		Users []User
 	}{
-	    Head_Title: "My Page",
-		Users: []User{
-			{
-				Email: "yavuzsamil.guengoer@gmail.com",
-				Password: "test123",
-			},
-			{
-				Email: "kingyavuzea7@gmail.com",
-				Password: "test1234",
-			},
-			{
-				Email: "samil_yavuz@web.de",
-				Password: "test12345",
-			},
-			{
-				Email: "revenmainacc@gmail.com",
-				Password: "test123456",
-			},
-		},
+		Users: accounts,
 	}
+
 	var buf bytes.Buffer
-	err := tmpl.ExecuteTemplate(&buf, "layout", data)
+	err = tmpl.ExecuteTemplate(&buf, "content", data)
 	if err != nil {
 		log.Fatal(err)
 	}
