@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"html/template"
 	"log"
 
 	"github.com/sam77il/sugar/middleware"
@@ -26,8 +28,49 @@ func main() {
 	app.Listen(8080)
 }
 
+type User struct {
+	Email string
+	Password string
+}
+
 func rootHandler(ctx *sugar.Context) {
-	ctx.HTML("test")
+	tmpl := template.Must(template.ParseFiles(
+	    "layouts/root.sugar",
+	    "components/header.sugar",
+	    "components/footer.sugar",
+	    "pages/root.sugar",
+	))
+		
+	data := struct {
+	    Head_Title  string
+		Users []User
+	}{
+	    Head_Title: "My Page",
+		Users: []User{
+			{
+				Email: "yavuzsamil.guengoer@gmail.com",
+				Password: "test123",
+			},
+			{
+				Email: "kingyavuzea7@gmail.com",
+				Password: "test1234",
+			},
+			{
+				Email: "samil_yavuz@web.de",
+				Password: "test12345",
+			},
+			{
+				Email: "revenmainacc@gmail.com",
+				Password: "test123456",
+			},
+		},
+	}
+	var buf bytes.Buffer
+	err := tmpl.ExecuteTemplate(&buf, "layout", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx.HTML(buf.String())
 }
 
 func aHandler(ctx *sugar.Context) {

@@ -1,0 +1,13 @@
+{{ define "content" }}
+    <div>
+        <h1>Hello From Root Sugar File</h1>
+
+        <ul>
+            {{ range .Users }}
+                <li>{{ .Email }} - {{ .Password }}</li>
+            {{ else }}
+                <p>Keine Nutzer gefunden</p>
+            {{ end }}
+        </ul>
+    </div>
+{{ end }}

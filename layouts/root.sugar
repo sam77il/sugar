@@ -1,0 +1,13 @@
+{{ define "layout" }}
+    <html lang="en">
+        <head>
+            <title>{{ .Head_Title }}</title>
+        </head>
+        <body>
+            {{ template "header" . }}
+            {{ block "content" . }}
+            {{ end }}
+            {{ template "footer" }}
+        </body>
+    </html>
+{{ end }}
