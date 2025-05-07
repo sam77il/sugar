@@ -1,11 +1,17 @@
 package sugar
 
 import (
+	"bytes"
 	"encoding/json"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -47,6 +53,39 @@ func (c *Context) HTML(html string) {
 	c.writer.Write([]byte(html))
 }
 
+func (c *Context) Page(data any, filenames ...string) {
+	if reflect.TypeOf(data).Kind() != reflect.Struct {
+		log.Fatal("Only Structs")
+	}
+	jsBytes, err := os.ReadFile("sugar/sugar.js")
+	if err != nil {
+		log.Fatal(err)
+	}
+	script := "<script>"
+	script += string(jsBytes)
+	script += "</script>"
+
+	wrapped := map[string]any{
+		"Data": data,
+		"JSLibrary": template.HTML(script),
+	}
+	withSuffix := make([]string, len(filenames))
+	for i, file := range filenames {
+		if !strings.HasSuffix(file, ".sugar") {
+			file += ".sugar"
+		}
+		withSuffix[i] = file
+	}
+	tmpl := template.Must(template.ParseFiles(withSuffix...))
+
+	var buf bytes.Buffer
+	err = tmpl.ExecuteTemplate(&buf, "page", wrapped)
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.HTML(buf.String())
+}
+
 func (c *Context) Redirect(url string) {
 	http.Redirect(c.writer, c.Request, url, http.StatusFound)
 }
@@ -61,6 +100,14 @@ func (c *Context) NotFound() {
 	http.NotFound(c.writer, c.Request)
 }
 
+func (c *Context) Form() url.Values {
+	err := c.Request.ParseForm()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return c.Request.Form
+}
+
 func (c *Context) Get(url string) (string, http.Header, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -73,7 +120,6 @@ func (c *Context) Get(url string) (string, http.Header, error) {
 	}
 
 	return string(body), resp.Header, nil
-	
 }
 
 func (c *Context) URL() *URL {
@@ -106,6 +152,14 @@ func (s *Sugar) Get(path string, handler HandlerFunction) {
 	})
 }
 
+func (s *Sugar) Post(path string, handler HandlerFunction) {
+	s.Routes = append(s.Routes, Route{
+		Path: path,
+		Method: http.MethodPost,
+		HandlerFunc: handler,
+	})
+}
+
 func (s *Sugar) Listen(port int) {
 	router := http.NewServeMux()
 	for _, route := range s.Routes {
@@ -114,6 +168,7 @@ func (s *Sugar) Listen(port int) {
 				http.NotFound(w, r)
 				return
 			}
+
 			ctx := Context{
 				DB: s.DB,
 				Request: r,

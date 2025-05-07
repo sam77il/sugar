@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"html/template"
+	"fmt"
 	"log"
 	"os"
 
@@ -34,55 +33,44 @@ func main() {
 	app.Get("/favicon.ico", func(ctx *sugar.Context) {
 		ctx.NotFound()
 	})
+	app.Get("/olala", olalaHandler)
 
 	app.Listen(8080)
 }
 
-type User struct {
+type Account struct {
 	Email string
 	Password string
 }
 
 func rootHandler(ctx *sugar.Context) {
-	tmpl := template.Must(template.ParseFiles(
-	    "components/header.sugar",
-	    "components/footer.sugar",
-	    "pages/root.sugar",
-	))
-
+	var accounts []Account
 	rows, err := ctx.DB.Query(ctx.Request.Context(), "SELECT email, password FROM accounts")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
-		
-	var accounts []User
+
 	for rows.Next() {
-		var acc User
-		if err := rows.Scan(&acc.Email, &acc.Password); err != nil {
-			log.Fatal(err)
-		}
-		accounts = append(accounts, acc)
+		var account Account
+
+		rows.Scan(&account.Email, &account.Password)
+		accounts = append(accounts, account)
 	}
 
 	data := struct{
-		Users []User
+		Accounts []Account
 	}{
-		Users: accounts,
+		Accounts: accounts,
 	}
 
-	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "content", data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	ctx.HTML(buf.String())
+	ctx.Page(data, "components/header", "components/footer", "pages/root")
 }
 
 func aHandler(ctx *sugar.Context) {
-	body, header, err := ctx.Get("http://localhost:8080/b")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(body, header.Get("Content-Type"))
+	ctx.HTML("<alo>ALO</alo>")
+}
+
+func olalaHandler(ctx *sugar.Context) {
+	fmt.Println(ctx.Form().Get("name"))
 }

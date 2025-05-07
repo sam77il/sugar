@@ -1,4 +1,5 @@
-{{ define "content" }}
+{{ define "page" }}
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
@@ -9,13 +10,29 @@
             <h1>Hello From Root Sugar File</h1>
 
             <ul>
-                {{ range .Users }}
+                {{ range .Data.Accounts }}
                     <li>{{ .Email }} - {{ .Password }}</li>
                 {{ else }}
                     <p>Keine Nutzer gefunden</p>
                 {{ end }}
             </ul>
+
+            <p sugar-state="test" state-test="1">1</p>
+            <p sugar-state="test" state-test="2">2</p>
+            <p sugar-state="test" state-test="5">5</p>
+            <p sugar-state="test" state-test="7">7</p>
+            <p sugar-state="test" state-test="8">8</p>
+
+            <button type="button" sugar-click="abc" sugar-onmount="buttonInit" sugar-onunmount="buttonRemoved" sugar-get="/a" sugar-get-cb="aloalo">Click Me!</button>
+
+            <form action="/olala" method="GET" sugar-form-submit="submitForm">
+                <input type="text" name="name" />
+                <input type="number" name="count" />
+                <button type="submit">Submit</button>
+            </form>
         </div>
+
+        {{ .JSLibrary }}
     </body>
 </html>
 {{ end }}
