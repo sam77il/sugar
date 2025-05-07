@@ -2,6 +2,7 @@ package sugar
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,6 +33,11 @@ type Context struct {
 	writer http.ResponseWriter
 }
 
+type URL struct {
+	Path string
+	Query map[string][]string
+}
+
 func (c *Context) HTML(html string) {
 	c.writer.Header().Set("Content-Type", "text/html")
 	c.writer.Write([]byte(html))
@@ -45,6 +51,40 @@ func (c *Context) JSON(content any) {
 	c.writer.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(c.writer)
 	enc.Encode(content)
+}
+
+func (c *Context) NotFound() {
+	http.NotFound(c.writer, c.request)
+}
+
+func (c *Context) Get(url string) (string, http.Header, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(body), resp.Header, nil
+	
+}
+
+func (c *Context) URL() *URL {
+	// data := struct{
+	// 	Path string
+	// 	Query map[string][]string
+	// }{
+	// 	Path: c.request.URL.Path,
+	// 	Query: c.request.URL.Query(),
+	// }
+
+	return &URL{
+		Path: c.request.URL.Path,
+		Query: c.request.URL.Query(),
+	}
 }
 
 func New(middlewares []Middleware) *Sugar {
