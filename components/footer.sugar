@@ -1,5 +1,5 @@
 {{ define "footer" }}
 <footer>
-    <h2>Footer Göt</h2>
+  <h2>Footer Göt</h2>
 </footer>
 {{ end }}

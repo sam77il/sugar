@@ -1,17 +1,17 @@
 {{ define "header" }}
 <header class="header">
-    <div class="header-title">
-        <a href="/"><h1>Ecommerce</h1></a>
-    </div>
-    <nav>
-        <ul>
-            <li>
-                <a href="/">Küche</a>
-            </li>
-            <li>
-                <a href="/">Bad</a>
-            </li>
-        </ul>
-    </nav>
+  <div class="header-title">
+    <a href="/"><h1>Ecommerce</h1></a>
+  </div>
+  <nav>
+    <ul>
+      <li>
+        <a href="/">Küche</a>
+      </li>
+      <li>
+        <a href="/">Bad</a>
+      </li>
+    </ul>
+  </nav>
 </header>
 {{ end }}

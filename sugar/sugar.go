@@ -64,7 +64,7 @@ func (c *Context) Page(data any, filenames ...string) {
 	if reflect.TypeOf(data).Kind() != reflect.Struct {
 		log.Fatal("Only Structs")
 	}
-	jsBytes, err := os.ReadFile("sugar/sugar.js")
+	jsBytes, err := os.ReadFile("sugar/frontend/sugar.js")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func (c *Context) Page(data any, filenames ...string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	resetCssBytes, err := os.ReadFile("styles/reset.css")
+	resetCssBytes, err := os.ReadFile("sugar/frontend/reset.css")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,21 +147,13 @@ func (c *Context) Get(url string) (string, http.Header, error) {
 }
 
 func (c *Context) URL() *URL {
-	// data := struct{
-	// 	Path string
-	// 	Query map[string][]string
-	// }{
-	// 	Path: c.request.URL.Path,
-	// 	Query: c.request.URL.Query(),
-	// }
-
 	return &URL{
 		Path: c.Request.URL.Path,
 		Query: c.Request.URL.Query(),
 	}
 }
 
-func New(config Config, middlewares []Middleware) *Sugar {
+func New(config Config) *Sugar {
 	var httpVersion int
 	if config.HTTP2 {
 		httpVersion = 2
@@ -177,15 +169,20 @@ func New(config Config, middlewares []Middleware) *Sugar {
 
 		return &Sugar{
 			DB: db,
-			Middlewares: middlewares,
 			HTTPVersion: httpVersion,
 		}
 	}
 
 	return &Sugar{
-		Middlewares: middlewares,
 		HTTPVersion: httpVersion,
 	}
+}
+
+func (s *Sugar) Middleware(path string, handler MiddlewareFunction) {
+	s.Middlewares = append(s.Middlewares, Middleware{
+		Path: path,
+		MiddlewareFunc: handler,
+	})
 }
 
 func (s *Sugar) Get(path string, handler HandlerFunction) {
