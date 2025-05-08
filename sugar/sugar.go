@@ -2,6 +2,7 @@ package sugar
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 type HandlerFunction func(*Context)
@@ -34,6 +36,7 @@ type Sugar struct {
 	Routes []Route
 	Middlewares []Middleware
 	NotFoundRoute HandlerFunction
+	HTTPVersion int
 }
 
 type Context struct {
@@ -45,6 +48,11 @@ type Context struct {
 type URL struct {
 	Path string
 	Query map[string][]string
+}
+
+type Config struct {
+	Postgres bool
+	HTTP2 bool
 }
 
 func (c *Context) HTML(html string) {
@@ -60,13 +68,29 @@ func (c *Context) Page(data any, filenames ...string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	cssBytes, err := os.ReadFile("styles/main.css")
+	if err != nil {
+		log.Fatal(err)
+	}
+	resetCssBytes, err := os.ReadFile("styles/reset.css")
+	if err != nil {
+		log.Fatal(err)
+	}
+	css := "<style>"
+	css += string(cssBytes)
+	css += "</style>"
+	resetCss := "<style>"
+	resetCss += string(resetCssBytes)
+	resetCss += "</style>"
 	script := "<script>"
 	script += string(jsBytes)
 	script += "</script>"
 
 	wrapped := map[string]any{
 		"Data": data,
-		"JSLibrary": template.HTML(script),
+		"JSLib": template.HTML(script),
+		"ResetStyles": template.HTML(resetCss),
+		"Styles": template.HTML(css),
 	}
 	withSuffix := make([]string, len(filenames))
 	for i, file := range filenames {
@@ -137,10 +161,30 @@ func (c *Context) URL() *URL {
 	}
 }
 
-func New(db *pgxpool.Pool, middlewares []Middleware) *Sugar {
+func New(config Config, middlewares []Middleware) *Sugar {
+	var httpVersion int
+	if config.HTTP2 {
+		httpVersion = 2
+	} else {
+		httpVersion = 1
+	}
+	if config.Postgres {
+		godotenv.Load()
+		db, err := pgxpool.New(context.Background(), os.Getenv("SUGAR_POSTGRES"))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return &Sugar{
+			DB: db,
+			Middlewares: middlewares,
+			HTTPVersion: httpVersion,
+		}
+	}
+
 	return &Sugar{
-		DB: db,
 		Middlewares: middlewares,
+		HTTPVersion: httpVersion,
 	}
 }
 
@@ -160,8 +204,10 @@ func (s *Sugar) Post(path string, handler HandlerFunction) {
 	})
 }
 
-func (s *Sugar) Listen(port int) {
+func (s *Sugar) Listen(port string) {
 	router := http.NewServeMux()
+	defer s.DB.Close()
+
 	for _, route := range s.Routes {
 		handler := func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != route.Method {
@@ -191,14 +237,19 @@ func (s *Sugar) Listen(port int) {
 		router.HandleFunc(route.Path, handler)
 	}
 
-	server := &http.Server{
-		Addr:    ":8443", // Standard-TLS-Port wäre 443, aber 8443 ist gut für lokal
-		Handler: router,  // Kein h2c nötig! HTTP/2 läuft automatisch über TLS
-	}
+	if s.HTTPVersion == 2 {
+		server := &http.Server{
+			Addr:    port, // Standard-TLS-Port wäre 443, aber 8443 ist gut für lokal
+			Handler: router,  // Kein h2c nötig! HTTP/2 läuft automatisch über TLS
+		}
 
-	log.Println("Starting server on https://localhost:8443 (mit HTTP/2 über TLS)")
-	err := server.ListenAndServeTLS("cert.pem", "key.pem")
-	if err != nil {
-		log.Fatal(err)
+		log.Println("Starting server on https://localhost" + port + " (with HTTP/2 on TLS)")
+		err := server.ListenAndServeTLS("cert.pem", "key.pem")
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println("Starting server on https://localhost" + port)
+		log.Fatal(http.ListenAndServe(port, router))
 	}
 }

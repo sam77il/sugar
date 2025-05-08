@@ -3,9 +3,13 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Root Page</title>
+        {{ .ResetStyles }}
+        {{ .Styles }}
     </head>
     <body>
+        {{ template "header" }}
         <div>
             <h1>Hello From Root Sugar File</h1>
 
@@ -32,7 +36,7 @@
             </form>
         </div>
 
-        {{ .JSLibrary }}
+        {{ .JSLib }}
     </body>
 </html>
 {{ end }}

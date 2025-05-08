@@ -1,26 +1,17 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 	"github.com/sam77il/sugar/db"
 	"github.com/sam77il/sugar/middleware"
 	"github.com/sam77il/sugar/sugar"
 )
 
 func main() {
-	godotenv.Load()
-	db, err := pgxpool.New(context.Background(), os.Getenv("POSTGRES_URI"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	app := sugar.New(db, []sugar.Middleware{
+	app := sugar.New(sugar.Config{
+		Postgres: true,
+	}, []sugar.Middleware{
 		{
 			Path: "/a",
 			MiddlewareFunc: middleware.LogRoute,
@@ -36,7 +27,7 @@ func main() {
 	})
 	app.Post("/olala", olalaHandler)
 
-	app.Listen(8080)
+	app.Listen(":8080")
 }
 
 func rootHandler(ctx *sugar.Context) {

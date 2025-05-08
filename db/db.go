@@ -16,7 +16,7 @@ func GetAllAccounts(db *pgxpool.Pool, ctx context.Context) []Account {
 	var accounts []Account
 	rows, err := db.Query(ctx, "SELECT email, password FROM accounts")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("sadasdasdas")
 	}
 	defer rows.Close()
 
