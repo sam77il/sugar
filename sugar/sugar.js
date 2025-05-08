@@ -23,13 +23,28 @@ function SugarLibraryInit(e) {
     if (element.hasAttribute("sugar-form-submit")) {
       let val = element.getAttribute("sugar-form-submit");
 
-      element.addEventListener("submit", (e) => {
+      element.addEventListener("submit", async (e) => {
+        let formData = new FormData(e.target);
+        let res = null;
         if (element.hasAttribute("sugar-form-pd")) {
           e.preventDefault();
+          let form = e.target;
+          let formData = new FormData(form);
+          let params = new URLSearchParams();
+          for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+          }
+
+          res = await fetch(form.action, {
+            method: form.method,
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: params.toString(),
+          });
         }
 
-        let formData = new FormData(element);
-        window[val](e, formData);
+        window[val](res, formData);
       });
     }
   }
@@ -110,7 +125,8 @@ async function aloalo(res) {
   console.log(text);
 }
 
-function submitForm(e, formData) {
+async function submitForm(res, formData) {
+  console.log(await res.json());
   console.log(formData.get("name"));
 }
 

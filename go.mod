@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/net v0.21.0
 )
 
 require (

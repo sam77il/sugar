@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -105,6 +104,7 @@ func (c *Context) Form() url.Values {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 	return c.Request.Form
 }
 
@@ -174,6 +174,7 @@ func (s *Sugar) Listen(port int) {
 				Request: r,
 				writer: w,
 			}
+
 			route.HandlerFunc(&ctx)
 		}
 
@@ -190,5 +191,14 @@ func (s *Sugar) Listen(port int) {
 		router.HandleFunc(route.Path, handler)
 	}
 
-	log.Fatal(http.ListenAndServe(":" + strconv.Itoa(port), router))
+	server := &http.Server{
+		Addr:    ":8443", // Standard-TLS-Port wäre 443, aber 8443 ist gut für lokal
+		Handler: router,  // Kein h2c nötig! HTTP/2 läuft automatisch über TLS
+	}
+
+	log.Println("Starting server on https://localhost:8443 (mit HTTP/2 über TLS)")
+	err := server.ListenAndServeTLS("cert.pem", "key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
 }

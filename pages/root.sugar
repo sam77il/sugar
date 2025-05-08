@@ -25,7 +25,7 @@
 
             <button type="button" sugar-click="abc" sugar-onmount="buttonInit" sugar-onunmount="buttonRemoved" sugar-get="/a" sugar-get-cb="aloalo">Click Me!</button>
 
-            <form action="/olala" method="GET" sugar-form-submit="submitForm">
+            <form action="/olala" method="post" sugar-form-submit="submitForm" sugar-form-pd>
                 <input type="text" name="name" />
                 <input type="number" name="count" />
                 <button type="submit">Submit</button>

@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/sam77il/sugar/db"
 	"github.com/sam77il/sugar/middleware"
 	"github.com/sam77il/sugar/sugar"
 )
@@ -33,33 +34,15 @@ func main() {
 	app.Get("/favicon.ico", func(ctx *sugar.Context) {
 		ctx.NotFound()
 	})
-	app.Get("/olala", olalaHandler)
+	app.Post("/olala", olalaHandler)
 
 	app.Listen(8080)
 }
 
-type Account struct {
-	Email string
-	Password string
-}
-
 func rootHandler(ctx *sugar.Context) {
-	var accounts []Account
-	rows, err := ctx.DB.Query(ctx.Request.Context(), "SELECT email, password FROM accounts")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var account Account
-
-		rows.Scan(&account.Email, &account.Password)
-		accounts = append(accounts, account)
-	}
-
+	accounts := db.GetAllAccounts(ctx.DB, ctx.Request.Context())
 	data := struct{
-		Accounts []Account
+		Accounts []db.Account
 	}{
 		Accounts: accounts,
 	}
@@ -72,5 +55,13 @@ func aHandler(ctx *sugar.Context) {
 }
 
 func olalaHandler(ctx *sugar.Context) {
-	fmt.Println(ctx.Form().Get("name"))
+	fmt.Println(ctx.Form())
+	data := struct{
+		Name string `json:"name"`
+		Success bool `json:"success"`
+	}{
+		Name: ctx.Form().Get("name"),
+		Success: true,
+	}
+	ctx.JSON(data)
 }
