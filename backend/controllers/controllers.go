@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 
 	"sugarweb.dev/web/backend/lib"
 	"sugarweb.dev/web/backend/sugar"
@@ -27,4 +28,57 @@ func SignupHandler(h *sugar.Handler) {
 	}
 
 	log.Println(user.Email)
+}
+
+func LoginHandler(h *sugar.Handler) {
+	var user lib.User
+	if err := json.Unmarshal(h.Request.Body, &user); err != nil {
+		log.Println(err.Error())
+	}
+
+	if user.Email != "admin@email.com" || user.Password != "abc123"  {
+		log.Println("not admin")
+		return
+	}
+
+	token, err := lib.GenereateJWT(user.Email, true)
+	if err != nil {
+		log.Println("Generating", err.Error())
+		return
+	}
+
+	cookie := http.Cookie{
+		Name: "jwt",
+		Value: token,
+		Path: "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	h.Response.SetCookie(&cookie)
+
+	h.Response.JSON(map[string]bool{
+		"success": true,
+	})
+}
+
+func ProtectedHandler(h *sugar.Handler) {
+	cookie, err := h.Request.Cookie("jwt")
+	if err != nil {
+		log.Println("Kein jwt token")
+		return
+	}
+
+	claims, err := lib.ParseJWT(cookie.Value)
+	if err != nil {
+		log.Println("Token invalid")
+		return
+	}
+
+	var user lib.User
+
+	user.Email = (*claims)["email"].(string)
+	user.IsAdmin = (*claims)["isAdmin"].(bool)
+
+	log.Printf("%+v", user)
 }

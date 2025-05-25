@@ -9,3 +9,15 @@ Content-Type: application/json
   "email": "example@email.com",
   "password": "mypassword123"
 }
+
+### Login User
+POST http://localhost:7070/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@email.com",
+  "password": "abc123"
+}
+
+### Protected Page
+GET http://localhost:7070/protected

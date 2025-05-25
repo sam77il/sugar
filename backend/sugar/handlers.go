@@ -28,3 +28,13 @@ func (h Response) JSON(data any) {
 		http.Error(h.w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func (h Response) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(h.w, cookie)
+}
+
+func (r Request) Cookie(cookieVal string) (*http.Cookie, error) {
+	cookie, err := r.r.Cookie(cookieVal)
+
+	return cookie, err
+}
