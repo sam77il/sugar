@@ -1,0 +1,11 @@
+### Testing
+GET http://localhost:7070
+
+### Register User
+POST http://localhost:7070/auth/signup
+Content-Type: application/json
+
+{
+  "email": "example@email.com",
+  "password": "mypassword123"
+}
