@@ -49,6 +49,30 @@ func (s *Sugar) Post(path string, handler HandlerFunction) {
 	})
 }
 
+func (s *Sugar) Put(path string, handler HandlerFunction) {
+	s.Routes = append(s.Routes, Route{
+		Path: path,
+		Method: "PUT",
+		HandlerFunc: handler,
+	})
+}
+
+func (s *Sugar) Patch(path string, handler HandlerFunction) {
+	s.Routes = append(s.Routes, Route{
+		Path: path,
+		Method: "PATCH",
+		HandlerFunc: handler,
+	})
+}
+
+func (s *Sugar) Delete(path string, handler HandlerFunction) {
+	s.Routes = append(s.Routes, Route{
+		Path: path,
+		Method: "DELETE",
+		HandlerFunc: handler,
+	})
+}
+
 func (s Sugar) Listen(port string) {
 	router := http.NewServeMux()
 	routes := make(map[string]map[string]Route)
@@ -58,7 +82,7 @@ func (s Sugar) Listen(port string) {
 		checkRoute(route, routes)
 	}
 
-	for path,_ := range routes {
+	for path := range routes {
 		router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			var route Route
 			var ok bool
