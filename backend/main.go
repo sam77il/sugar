@@ -14,7 +14,8 @@ func main() {
 	})
 	
 	app.Get("/", controllers.RootHandler)
-	app.Post("/", controllers.RootHandler2)
+	app.Post("/:id", controllers.RootHandler2)
 	app.Post("/auth/signup", controllers.SignupHandler)
-	app.Listen(":7070")
+
+	app.Listen(7070)
 }

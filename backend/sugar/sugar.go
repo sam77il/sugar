@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Sugar struct {
@@ -73,16 +75,21 @@ func (s *Sugar) Delete(path string, handler HandlerFunction) {
 	})
 }
 
-func (s Sugar) Listen(port string) {
+func (s Sugar) Listen(port uint64) {
+	fmt.Println(">> Booting up server <<")
 	router := http.NewServeMux()
 	routes := make(map[string]map[string]Route)
 
 	for _, route := range s.Routes {
-		fmt.Println("for", route.Path)
 		checkRoute(route, routes)
 	}
 
 	for path := range routes {
+		if strings.Contains(path, ":") {
+			keys := strings.TrimPrefix(path, ":")
+			log.Println(keys[len(keys) - 1])
+		}
+
 		router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			var route Route
 			var ok bool
@@ -90,6 +97,9 @@ func (s Sugar) Listen(port string) {
 				http.Error(w, "not allowed http method", http.StatusMethodNotAllowed)
 				return
 			}
+
+
+
 			bodyBytes, err := io.ReadAll(r.Body)
 			if err != nil {
 				http.Error(w, "could not read body", http.StatusInternalServerError)
@@ -111,10 +121,9 @@ func (s Sugar) Listen(port string) {
 			route.HandlerFunc(&controller)
 		})
 	}
-
-	if err := http.ListenAndServe(port, router); err != nil {
-		log.Fatalf("error listening for port %s reason: %s", port, err.Error())
-	}
+	finalPort := strconv.FormatUint(port, 10)
+	fmt.Println(">> Successfully booted up on port", finalPort)
+	log.Fatal(http.ListenAndServe(":" + finalPort, router))
 }
 
 func checkRoute(r Route, routes map[string]map[string]Route) {

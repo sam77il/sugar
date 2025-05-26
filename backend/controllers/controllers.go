@@ -3,13 +3,12 @@ package controllers
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 
 	"sugarweb.dev/web/backend/lib"
 	"sugarweb.dev/web/backend/sugar"
 )
 
-func RootHandler(h *sugar.Controller) {
+func RootHandler(crr *sugar.Controller) {
 	data := struct {
 		Content string `json:"content"`
 		Success bool `json:"success"`
@@ -18,26 +17,26 @@ func RootHandler(h *sugar.Controller) {
 		Success: true,
 	}
 
-	h.Response.JSON(data)
+	crr.Response.JSON(data)
 }
 
-func RootHandler2(h *sugar.Controller) {
-	body := string(h.Request.Body)
+func RootHandler2(crr *sugar.Controller) {
+	body := string(crr.Request.Body)
 	log.Println(body)
 }
 
-func SignupHandler(h *sugar.Controller) {
+func SignupHandler(crr *sugar.Controller) {
 	var user lib.User
-	if err := json.Unmarshal(h.Body, &user); err != nil {
+	if err := json.Unmarshal(crr.Body, &user); err != nil {
 		log.Fatal("Error")
 	}
 
 	log.Println(user.Email)
 }
 
-func LoginHandler(h *sugar.Controller) {
+func LoginHandler(crr *sugar.Controller) {
 	var user lib.User
-	if err := json.Unmarshal(h.Request.Body, &user); err != nil {
+	if err := json.Unmarshal(crr.Request.Body, &user); err != nil {
 		log.Println(err.Error())
 	}
 
@@ -52,17 +51,17 @@ func LoginHandler(h *sugar.Controller) {
 		return
 	}
 
-	cookie := http.Cookie{
+	cookie := sugar.Cookie{
 		Name: "jwt",
 		Value: token,
 		Path: "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: 3,
 	}
 
-	h.Response.SetCookie(&cookie)
+	crr.Response.SetCookie(&cookie)
 
-	h.Response.JSON(map[string]bool{
+	crr.Response.JSON(map[string]bool{
 		"success": true,
 	})
 }
