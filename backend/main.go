@@ -14,8 +14,7 @@ func main() {
 	})
 	
 	app.Get("/", controllers.RootHandler)
+	app.Get("/", controllers.RootHandler2)
 	app.Post("/auth/signup", controllers.SignupHandler)
-	app.Post("/auth/signin", controllers.LoginHandler)
-	app.Get("/protected", controllers.ProtectedHandler)
 	app.Listen(":7070")
 }

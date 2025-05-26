@@ -5,8 +5,7 @@ import (
 	"net/http"
 )
 
-
-type Handler struct {
+type Controller struct {
 	Request
 	Response
 }

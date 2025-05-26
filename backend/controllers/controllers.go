@@ -9,7 +9,7 @@ import (
 	"sugarweb.dev/web/backend/sugar"
 )
 
-func RootHandler(h *sugar.Handler) {
+func RootHandler(h *sugar.Controller) {
 	data := struct {
 		Content string `json:"content"`
 		Success bool `json:"success"`
@@ -21,7 +21,12 @@ func RootHandler(h *sugar.Handler) {
 	h.Response.JSON(data)
 }
 
-func SignupHandler(h *sugar.Handler) {
+func RootHandler2(h *sugar.Controller) {
+	body := string(h.Request.Body)
+	log.Println(body)
+}
+
+func SignupHandler(h *sugar.Controller) {
 	var user lib.User
 	if err := json.Unmarshal(h.Body, &user); err != nil {
 		log.Fatal("Error")
@@ -30,7 +35,7 @@ func SignupHandler(h *sugar.Handler) {
 	log.Println(user.Email)
 }
 
-func LoginHandler(h *sugar.Handler) {
+func LoginHandler(h *sugar.Controller) {
 	var user lib.User
 	if err := json.Unmarshal(h.Request.Body, &user); err != nil {
 		log.Println(err.Error())
@@ -62,7 +67,7 @@ func LoginHandler(h *sugar.Handler) {
 	})
 }
 
-func ProtectedHandler(h *sugar.Handler) {
+func ProtectedHandler(h *sugar.Controller) {
 	cookie, err := h.Request.Cookie("jwt")
 	if err != nil {
 		log.Println("Kein jwt token")

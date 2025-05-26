@@ -1,6 +1,14 @@
 ### Testing
 GET http://localhost:7070
 
+### Test 2
+POST http://localhost:7070
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
 ### Register User
 POST http://localhost:7070/auth/signup
 Content-Type: application/json
