@@ -2,6 +2,7 @@ package sugar
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -49,89 +50,64 @@ func (s *Sugar) Post(path string, handler HandlerFunction) {
 }
 
 func (s Sugar) Listen(port string) {
-	routes := map[string]map[string]Route{
-		"/": map[string]Route{
-			"GET": Route{
-
-			},
-		},
-	}
 	router := http.NewServeMux()
+	routes := make(map[string]map[string]Route)
 
 	for _, route := range s.Routes {
 		fmt.Println("for", route.Path)
 		checkRoute(route, routes)
-
-		// for i, path := range routes {
-			
-		// }
-		// router.HandleFunc(route.Path, func(w http.ResponseWriter, r *http.Request) {
-		// 	if route.Data[r.Method] == nil {
-		// 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		// 		return
-		// 	}
-
-		// 	if s.Logs {
-		// 		log.Printf("%s %s", r.Method, r.URL)
-		// 	}
-
-		// 	var bodyBytes []byte
-		// 	var err error
-		// 	if bodyBytes, err = io.ReadAll(r.Body); err != nil {
-		// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	}
-
-		// 	handler := &Handler{
-		// 		Response: Response{
-		// 			w: w,
-		// 		},
-		// 		Request: Request{
-		// 			Path: r.URL.Path,
-		// 			Method: r.Method,
-		// 			Body: bodyBytes,
-		// 			r: r,
-		// 		},
-		// 	}
-
-		// 	route.HandlerFunc(handler)
-		// })
 	}
+
+	for path,_ := range routes {
+		router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			var route Route
+			var ok bool
+			if route, ok = routes[path][r.Method]; !ok {
+				http.Error(w, "not allowed http method", http.StatusMethodNotAllowed)
+				return
+			}
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "could not read body", http.StatusInternalServerError)
+				return
+			}
+
+			controller := Controller{
+				Request: Request{
+					r: r,
+					Body: bodyBytes,
+					Path: r.URL.Path,
+					Method: r.Method,
+				},
+				Response: Response{
+					w: w,
+				},
+			}
+
+			route.HandlerFunc(&controller)
+		})
+	}
+
 	if err := http.ListenAndServe(port, router); err != nil {
 		log.Fatalf("error listening for port %s reason: %s", port, err.Error())
 	}
 }
 
-func checkRoute(r Route, routes map[string]) {
-	if len(routes) > 0 {
-		for _, route := range routes {
-			route["/"].
+func checkRoute(r Route, routes map[string]map[string]Route) {
+	_, ok := routes[r.Path]
+	if ok {
+		_, ok2 := routes[r.Path][r.Method]
+		if ok2 {
+			log.Fatal("already existing path and route detected")
+			return
 		}
-
-		// routes[r.Path] = append(routes[r.Path], Route{
-		// 	Path: r.Path,
-		// 	Method: r.Method,
-		// 	HandlerFunc: r.HandlerFunc,
-		// })
 	} else {
-		// routes[r.Path] = append(routes[r.Path], Route{
-		// 	Path: r.Path,
-		// 	Method: r.Method,
-		// 	HandlerFunc: r.HandlerFunc,
-		// })
+		routes[r.Path] = make(map[string]Route)
 	}
-	// if len(routes) > 0 {
-	// 	for i, route := range routes {
-	// 		if route.Path == r.Path {
-	// 			for _, m := range route.Methods {
-	// 				if m == r.Methods[0] {log.Fatal("found a route with identical paths and methods")}
-	// 			}
-	// 			log.Println("added")
-	// 			(*routes)[i].Methods = append((*routes)[i].Methods, r.Methods[0])
-	// 		} else {
-	// 			*routes = append(*routes, r)
-	// 		}
-	// 	}
-	// } else {
-	// 	*routes = append(*routes, r)
-	// }
+	
+	routes[r.Path][r.Method] = Route{
+		Path: r.Path,
+		Method: r.Method,
+		HandlerFunc: r.HandlerFunc,
+	}
 }
