@@ -1,0 +1,26 @@
+{
+  "name": "sugar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/src/app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sam77il/sugar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/sam77il/sugar/issues"
+  },
+  "homepage": "https://github.com/sam77il/sugar#readme",
+  "devDependencies": {
+    "vite": "^8.0.8"
+  }
+}

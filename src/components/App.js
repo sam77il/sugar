@@ -5,7 +5,7 @@ import { Component, defineComponent, listenToStore } from "../sugar.js";
 class App extends Component {
   template = `
   <main>
-    <h1>Main Component</h1>
+    <h1>${countStore.count}</h1>
     <button>Click Me</button>
     <a href="/users">Users</a>
     <a href="/home">Home</a>
@@ -13,6 +13,18 @@ class App extends Component {
     <div id="layoutlol"></div>
   </main>
   `;
+  t() {
+    return `
+  <main>
+    <h1>${countStore.count}</h1>
+    <button>Click Me</button>
+    <a href="/users">Users</a>
+    <a href="/home">Home</a>
+    <a href="/lol">Test</a>
+    <div id="layoutlol"></div>
+  </main>
+  `;
+  }
   styles = `
   main {
     background-color: #111;
@@ -29,7 +41,7 @@ class App extends Component {
   mounted() {
     console.log("mounted app");
     listenToStore("appcounterchange", () => {
-      this.querySelector("h1").textContent = countStore.count;
+      this.querySelector("h1").innerText = countStore.count;
     });
     const btn = this.querySelector("button");
     btn.addEventListener("click", () => {

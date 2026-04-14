@@ -9,7 +9,7 @@ createApp(document.createElement("sugar-app")).mount("#app");
 
 const router = defineRouter([
   {
-    path: "/home",
+    path: "/",
     slot: "#layoutlol",
     component: "sugar-home",
   },

@@ -7,7 +7,7 @@ class Component extends HTMLElement {
   }
 
   connectedCallback() {
-    this.innerHTML = this.template;
+    this.innerHTML = this.template ?? "";
     const styles = document.createElement("style");
     styles.innerHTML = this.styles ?? "";
     this.appendChild(styles);
@@ -46,6 +46,9 @@ function defineStore(obj, eventName) {
       window.dispatchEvent(new Event(eventName));
       return true;
     },
+    get(target, p, _) {
+      return target[p];
+    },
   });
 }
 
@@ -54,7 +57,7 @@ function listenToStore(eventName, cb) {
 }
 
 function defineRouter(routes) {
-  window.addEventListener("sugarroutechange", () => {
+  function routeHandler() {
     let foundRoute = false;
     for (const route of routes) {
       if (route.path === document.location.pathname) {
@@ -70,6 +73,18 @@ function defineRouter(routes) {
       appEl.innerHTML = "";
       appEl.innerHTML = "404 | Oops page not found";
     }
+    console.log(foundRoute);
+  }
+  window.addEventListener("sugarroutechange", () => {
+    routeHandler();
+  });
+
+  window.addEventListener("popstate", () => {
+    routeHandler();
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    routeHandler();
   });
 
   const router = {
