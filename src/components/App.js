@@ -10,21 +10,9 @@ class App extends Component {
     <a href="/users">Users</a>
     <a href="/home">Home</a>
     <a href="/lol">Test</a>
-    <div id="layoutlol"></div>
+    <route-content />
   </main>
   `;
-  t() {
-    return `
-  <main>
-    <h1>${countStore.count}</h1>
-    <button>Click Me</button>
-    <a href="/users">Users</a>
-    <a href="/home">Home</a>
-    <a href="/lol">Test</a>
-    <div id="layoutlol"></div>
-  </main>
-  `;
-  }
   styles = `
   main {
     background-color: #111;

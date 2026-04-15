@@ -62,18 +62,24 @@ function defineRouter(routes) {
     for (const route of routes) {
       if (route.path === document.location.pathname) {
         foundRoute = true;
-        const slot = document.querySelector(route.slot);
-        slot.innerHTML = "";
-        slot.appendChild(document.createElement(route.component));
+        const routeContent = document.querySelector("route-content");
+        if (!routeContent) throw new Error("route-content component not found");
+        routeContent.innerHTML = "";
+        if (route.layout) {
+          const layoutEl = document.createElement(route.layout);
+          routeContent.appendChild(layoutEl);
+          layoutEl.appendChild(document.createElement(route.component));
+        } else if (route.component) {
+          routeContent.appendChild(document.createElement(route.component));
+        }
         break;
       }
     }
     if (!foundRoute) {
-      const appEl = document.querySelector("#app");
-      appEl.innerHTML = "";
-      appEl.innerHTML = "404 | Oops page not found";
+      const routeContent = document.querySelector("route-content");
+      routeContent.innerHTML = "";
+      routeContent.innerHTML = "404 | Oops page not found";
     }
-    console.log(foundRoute);
   }
   window.addEventListener("sugarroutechange", () => {
     routeHandler();
@@ -95,6 +101,13 @@ function defineRouter(routes) {
   };
   return router;
 }
+
+class RouteContent extends Component {
+  constructor() {
+    super();
+  }
+}
+defineComponent("route-content", RouteContent);
 
 export {
   Component,

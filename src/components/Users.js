@@ -12,6 +12,8 @@ class Users extends Component {
   }
 
   mounted() {
+    const { data } = this.attributes;
+    console.log(data);
     console.log("mounted users");
   }
 }
